@@ -705,6 +705,22 @@ cdef class SortingColumn:
         """Whether null values appear before valid values (bool)."""
         return self.nulls_first
 
+    def to_dict(self):
+        """
+        Get dictionary representation of the SortingColumn.
+
+        Returns
+        -------
+        dict
+            Dictionary with a key for each attribute of this class.
+        """
+        d = dict(
+            column_index=self.column_index,
+            descending=self.descending,
+            nulls_first=self.nulls_first
+        )
+        return d
+
 
 cdef class RowGroupMetaData(_Weakrefable):
     """Metadata for a single row group."""
@@ -848,6 +864,13 @@ cdef class FileMetaData(_Weakrefable):
 
         cdef Buffer buffer = sink.getvalue()
         return _reconstruct_filemetadata, (buffer,)
+
+    def __hash__(self):
+        return hash((self.schema,
+                     self.num_rows,
+                     self.num_row_groups,
+                     self.format_version,
+                     self.serialized_size))
 
     def __repr__(self):
         return """{0}
@@ -1070,6 +1093,9 @@ cdef class ParquetSchema(_Weakrefable):
 
     def __getitem__(self, i):
         return self.column(i)
+
+    def __hash__(self):
+        return hash(self.schema.ToString())
 
     @property
     def names(self):
